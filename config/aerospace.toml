@@ -1,0 +1,98 @@
+config-version = 2
+start-at-login = true
+auto-reload-config = true
+
+# Refresh the bar when focus changes. Window lists also refresh every 10 seconds.
+exec-on-workspace-change = [
+    '/bin/bash',
+    '-c',
+    'sketchybar --trigger bar_refresh',
+]
+on-focused-monitor-changed = [
+    'move-mouse monitor-lazy-center',
+    'exec-and-forget sketchybar --trigger bar_refresh',
+]
+
+persistent-workspaces = ["G", "M", "V", "W", "1", "2", "3", "4", "5", "6"]
+
+gaps.inner.horizontal = 8
+gaps.inner.vertical = 8
+# Leave room for the bar on any monitor. Adjust to suit your menu bar settings.
+gaps.outer.top = 46
+gaps.outer.bottom = 8
+gaps.outer.left = 8
+gaps.outer.right = 8
+
+# Keep system utility windows floating. App windows stay where you open them.
+on-window-detected = [
+    { if = 'test %{app-bundle-id} = com.apple.systempreferences', run = 'layout floating' },
+    { if = 'test %{app-bundle-id} = com.apple.finder', run = 'layout floating' },
+]
+
+[mode.main.binding]
+    cmd-h = []
+    cmd-alt-h = []
+
+    # Focus an existing app window on any workspace, or launch on its home.
+    alt-g = 'exec-and-forget ~/.config/sketchybar/plugins/summon.sh Ghostty G Ghostty'
+    alt-m = 'exec-and-forget ~/.config/sketchybar/plugins/summon.sh Spotify M Spotify'
+    alt-v = 'exec-and-forget ~/.config/sketchybar/plugins/summon.sh "Code" V "Visual Studio Code"'
+    alt-w = 'exec-and-forget ~/.config/sketchybar/plugins/summon.sh WhatsApp W WhatsApp'
+
+    # Scratch workspaces 1-3 use main, 4-6 prefer secondary.
+    alt-1 = 'workspace 1'
+    alt-2 = 'workspace 2'
+    alt-3 = 'workspace 3'
+    alt-4 = 'workspace 4'
+    alt-5 = 'workspace 5'
+    alt-6 = 'workspace 6'
+
+    alt-shift-g = 'move-node-to-workspace G'
+    alt-shift-m = 'move-node-to-workspace M'
+    alt-shift-v = 'move-node-to-workspace V'
+    alt-shift-w = 'move-node-to-workspace W'
+    alt-shift-1 = 'move-node-to-workspace 1'
+    alt-shift-2 = 'move-node-to-workspace 2'
+    alt-shift-3 = 'move-node-to-workspace 3'
+    alt-shift-4 = 'move-node-to-workspace 4'
+    alt-shift-5 = 'move-node-to-workspace 5'
+    alt-shift-6 = 'move-node-to-workspace 6'
+
+    # Keep option+arrow free for normal macOS text navigation. Hyper here means
+    # control+option+command.
+    alt-tab = 'focus dfs-next --wrap-around'
+    alt-shift-tab = 'focus dfs-prev --wrap-around'
+    alt-f = 'fullscreen'
+    # Rearranges the focused window. Moving horizontally turns a stacked pair
+    # into a side-by-side pair, and vertically stacks it again. Focus itself is
+    # option+tab / option+shift+tab.
+    ctrl-alt-cmd-left = 'move left'
+    ctrl-alt-cmd-down = 'move down'
+    ctrl-alt-cmd-up = 'move up'
+    ctrl-alt-cmd-right = 'move right'
+
+    # Focus a monitor, or move a window to it. Directions follow display layout.
+    alt-ctrl-left = 'focus-monitor --wrap-around left'
+    alt-ctrl-down = 'focus-monitor --wrap-around down'
+    alt-ctrl-up = 'focus-monitor --wrap-around up'
+    alt-ctrl-right = 'focus-monitor --wrap-around right'
+    alt-ctrl-1 = 'focus-monitor -- main'
+    alt-ctrl-2 = 'focus-monitor -- secondary'
+    alt-ctrl-shift-left = 'move-node-to-monitor --focus-follows-window --wrap-around left'
+    alt-ctrl-shift-down = 'move-node-to-monitor --focus-follows-window --wrap-around down'
+    alt-ctrl-shift-up = 'move-node-to-monitor --focus-follows-window --wrap-around up'
+    alt-ctrl-shift-right = 'move-node-to-monitor --focus-follows-window --wrap-around right'
+    alt-ctrl-shift-1 = 'move-node-to-monitor --focus-follows-window -- main'
+    alt-ctrl-shift-2 = 'move-node-to-monitor --focus-follows-window -- secondary'
+    # Move the whole workspace to the next monitor.
+    alt-ctrl-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+
+# Monitor roles follow System Settings > Displays. If secondary is absent,
+# workspaces 4-6 use main. Letter workspaces can move between monitors.
+[workspace-to-monitor-force-assignment]
+    1 = 'main'
+    2 = 'main'
+    3 = 'main'
+    4 = ['secondary', 'main']
+    5 = ['secondary', 'main']
+    6 = ['secondary', 'main']

@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+DIR="${CONFIG_DIR:-$HOME/.config/sketchybar}"
+AERO="aerospace"
+source "$DIR/colors.sh"
+
+sketchybar --bar position=top height=38 notch_display_height=38 \
+  notch_width=185 notch_offset=0 \
+  color=0x00000000 blur_radius=0 shadow=off \
+  padding_left=8 padding_right=8 sticky=on topmost=off
+
+sketchybar --default \
+  background.drawing=on background.height=28 background.corner_radius=10 \
+  background.color="$BG_OFF" \
+  icon.font="Helvetica Neue:Bold:12.0" icon.padding_left=11 icon.padding_right=0 \
+  label.font="Helvetica Neue:Medium:12.0" label.padding_left=8 label.padding_right=11 \
+  label.drawing=off padding_left=5 padding_right=5
+
+APPLE="$(perl -CS -e 'print chr(0xF179)')"
+
+# Shared items use SketchyBar's native duplication across connected displays.
+sketchybar --add item apple left \
+  --set apple icon="$APPLE" icon.color="$ACCENT" display=0 \
+  icon.font="Hack Nerd Font:Regular:16.0" \
+  icon.padding_left=13 icon.padding_right=13 \
+  click_script="$DIR/plugins/apple.sh"
+
+while IFS='|' read -r key app launch; do
+  [[ -z "$key" || "$key" == \#* ]] && continue
+  if [[ -n "$app" ]]; then
+    click="$DIR/plugins/summon.sh $(printf '%q' "$app") $(printf '%q' "$key") $(printf '%q' "${launch:-$app}")"
+  else
+    click="$AERO workspace $key"
+  fi
+  sketchybar --add item "sp.$key.m" left \
+    --set "sp.$key.m" icon="$key" display=1 drawing=off click_script="$click"
+  sketchybar --add item "sp.$key.e" left \
+    --set "sp.$key.e" icon="$key" display=2 drawing=off click_script="$click"
+done < "$DIR/apps.conf"
+
+sketchybar --add item clock right \
+  --set clock script="$DIR/plugins/clock.sh" update_freq=30 display=0 \
+  label.font="Helvetica Neue:Medium:12.0" label.color="$FG_ON" \
+  label.padding_left=11 label.padding_right=11 background.color="$BG_OFF" \
+  icon.drawing=off label.drawing=on \
+  --subscribe clock system_woke
+
+sketchybar --add item battery right \
+  --set battery script="$DIR/plugins/battery.sh" update_freq=60 display=0 \
+  icon.font="Hack Nerd Font:Regular:16.0" \
+  icon.padding_left=11 icon.padding_right=4 \
+  label.font="Helvetica Neue:Medium:12.0" label.padding_left=0 label.padding_right=11 \
+  background.color="$BG_OFF" \
+  --subscribe battery system_woke power_source_change
+
+sketchybar --add item mon.2 right \
+  --set mon.2 icon=2 icon.padding_left=11 icon.padding_right=11 display=0 \
+  icon.color="$FG_OFF" label.drawing=off \
+  click_script="$AERO focus-monitor -- secondary; sketchybar --trigger bar_refresh"
+
+sketchybar --add item mon.1 right \
+  --set mon.1 icon=1 icon.padding_left=11 icon.padding_right=11 display=0 \
+  icon.color="$FG_OFF" label.drawing=off \
+  click_script="$AERO focus-monitor -- main; sketchybar --trigger bar_refresh"
+
+sketchybar --add event bar_refresh
+
+# Repaint on workspace changes, display changes, wake, and a periodic timer.
+sketchybar --add item refresh left \
+  --set refresh drawing=off update_freq=10 script="$DIR/plugins/refresh.sh" display=0 \
+  --subscribe refresh bar_refresh display_change system_woke
+
+# Paint after the rc finishes (calling refresh inline during load hangs sketchybar).
+(sleep 0.5; sketchybar --trigger bar_refresh) &
+sketchybar --update
